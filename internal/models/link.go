@@ -1,9 +1,10 @@
 package models
 
-// TODO : Créer la struct Link
-// Link représente un lien raccourci dans la base de données.
-// Les tags `gorm:"..."` définissent comment GORM doit mapper cette structure à une table SQL.
-// ID qui est une primaryKey
-// Shortcode : doit être unique, indexé pour des recherches rapide (voir doc), taille max 10 caractères
-// LongURL : doit pas être null
-// CreateAt : Horodatage de la créatino du lien
+import "time"
+
+type Link struct {
+	ID        uint      `gorm:"primaryKey"`           // Clé primaire
+	Shortcode string    `gorm:"unique;index;size:10"` // Code court unique, indexé pour des recherches rapides
+	LongURL   string    `gorm:"not null"`             // URL complète du lien
+	CreatedAt time.Time `gorm:"autoCreateTime"`       // Horodatage de la création du lien
+}

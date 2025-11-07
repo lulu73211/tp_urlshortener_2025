@@ -1,16 +1,25 @@
 package config
 
 import (
-	"fmt"
 	"log" // Pour logger les informations ou erreurs de chargement de config
 
 	"github.com/spf13/viper" // La bibliothèque pour la gestion de configuration
 )
 
-// TODO Créer Config qui est la structure principale qui mappe l'intégralité de la configuration de l'application.
-// Les tags `mapstructure` sont utilisés par Viper pour mapper les clés du fichier de config
-// (ou des variables d'environnement) aux champs de la structure Go.
 type Config struct {
+	Server struct {
+		Port    int    `mapstructure:"server.port"`
+		BaseURL string `mapstructure:"server.base_url"`
+	} `mapstructure:"server"`
+	Database struct {
+		Name string `mapstructure:"database.name"`
+	} `mapstructure:"database"`
+	Analytics struct {
+		BufferSize int `mapstructure:"analytics.buffer_size"`
+	} `mapstructure:"analytics"`
+	Monitor struct {
+		IntervalMinutes int `mapstructure:"monitor.interval_minutes"`
+	} `mapstructure:"monitor"`
 }
 
 // LoadConfig charge la configuration de l'application en utilisant Viper.

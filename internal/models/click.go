@@ -13,7 +13,10 @@ type Click struct {
 	IPAddress string    `gorm:"size:50"`  // Adresse IP de l'utilisateur
 }
 
-// TODO créer la struct pour ClickEvent
 // ClickEvent représente un événement de clic brut, destiné à être passé via un channel
-// Ce n'est pas un modèle GORM direct.
-// Un Click event a un LinkID(uint), un Timestamp (Time.Time), un UserAgent (string) et un IP (stringà
+type ClickEvent struct {
+	LinkID    uint      `json:"link_id"`    // Identifiant du lien raccourci
+	Timestamp time.Time `json:"timestamp"`  // Horodatage précis du clic
+	UserAgent string    `json:"user_agent"` // User-Agent de l'utilisateur qui a cliqué (informations sur le navigateur/OS)
+	IPAddress string    `json:"ip_address"` // Adresse IP de l'utilisateur
+}
