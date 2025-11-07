@@ -39,10 +39,7 @@ func (r *GormLinkRepository) CreateLink(link *models.Link) error {
 // Il renvoie gorm.ErrRecordNotFound si aucun lien n'est trouvé avec ce shortCode.
 func (r *GormLinkRepository) GetLinkByShortCode(shortCode string) (*models.Link, error) {
 	var link models.Link
-	if err := r.db.Where("short_code = ?", shortCode).First(&link).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, gorm.ErrRecordNotFound
-		}
+	if err := r.db.Where("Shortcode = ?", shortCode).First(&link).Error; err != nil {
 		return nil, fmt.Errorf("failed to get link by short code %s: %w", shortCode, err)
 	}
 	return &link, nil
