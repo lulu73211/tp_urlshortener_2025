@@ -8,17 +8,17 @@ import (
 
 type Config struct {
 	Server struct {
-		Port    int    `mapstructure:"server.port"`
-		BaseURL string `mapstructure:"server.base_url"`
+		Port    int    `mapstructure:"port"`
+		BaseURL string `mapstructure:"base_url"`
 	} `mapstructure:"server"`
 	Database struct {
-		Name string `mapstructure:"database.name"`
+		Name string `mapstructure:"name"`
 	} `mapstructure:"database"`
 	Analytics struct {
-		BufferSize int `mapstructure:"analytics.buffer_size"`
+		BufferSize int `mapstructure:"buffer_size"`
 	} `mapstructure:"analytics"`
 	Monitor struct {
-		IntervalMinutes int `mapstructure:"monitor.interval_minutes"`
+		IntervalMinutes int `mapstructure:"interval_minutes"`
 	} `mapstructure:"monitor"`
 }
 
@@ -26,23 +26,36 @@ type Config struct {
 // Elle recherche un fichier 'config.yaml' dans le dossier 'configs/'.
 // Elle définit également des valeurs par défaut si le fichier de config est absent ou incomplet.
 func LoadConfig() (*Config, error) {
-	// TODO Spécifie le chemin où Viper doit chercher les fichiers de config.
+	// Spécifie le chemin où Viper doit chercher les fichiers de config.
 	// on cherche dans le dossier 'configs' relatif au répertoire d'exécution.
+	viper.AddConfigPath("./configs")
 
-	// TODO Spécifie le nom du fichier de config (sans l'extension).
+	// Spécifie le nom du fichier de config (sans l'extension).
+	viper.SetConfigName("config")
 
-	// TODO Spécifie le type de fichier de config.
+	// Spécifie le type de fichier de config.
 	viper.SetConfigType("yaml")
 
-	// TODO : Définir les valeurs par défaut pour toutes les options de configuration.
+	// Définir les valeurs par défaut pour toutes les options de configuration.
 	// Ces valeurs seront utilisées si les clés correspondantes ne sont pas trouvées dans le fichier de config
 	// ou si le fichier n'existe pas.
-	// server.port, server.base_url etc.
+	viper.SetDefault("server.port", 8080)
+	viper.SetDefault("server.base_url", "http://localhost:8080")
+	viper.SetDefault("database.name", "urlshortener.db")
+	viper.SetDefault("analytics.buffer_size", 100)
+	viper.SetDefault("monitor.interval_minutes", 60)
 
-	// TODO : Lire le fichier de configuration.
+	// Lire le fichier de configuration.
+	if err := viper.ReadInConfig(); err != nil {
+		// Si le fichier de config n'existe pas, utiliser les valeurs par défaut
+		log.Printf("Fichier de configuration non trouvé: %v. Utilisation des valeurs par défaut.", err)
+	}
 
-	// TODO 4: Démapper (unmarshal) la configuration lue (ou les valeurs par défaut) dans la structure Config.
+	// Démapper (unmarshal) la configuration lue (ou les valeurs par défaut) dans la structure Config.
 	var cfg Config
+	if err := viper.Unmarshal(&cfg); err != nil {
+		return nil, err
+	}
 
 	// Log  pour vérifier la config chargée
 	log.Printf("Configuration loaded: Server Port=%d, DB Name=%s, Analytics Buffer=%d, Monitor Interval=%dmin",

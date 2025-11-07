@@ -26,10 +26,9 @@ type ClickEvent struct {
 var ClickEventsChannel chan ClickEvent
 
 // SetupRoutes configure toutes les routes de l'API Gin et injecte les dépendances nécessaires.
-func SetupRoutes(router *gin.Engine, linkService *services.LinkService) {
+func SetupRoutes(router *gin.Engine, linkService *services.LinkService, bufferSize int) {
 	// Initialisation du channel des événements de clics.
 	if ClickEventsChannel == nil {
-		bufferSize := viper.GetInt("analytics.buffer_size")
 		if bufferSize <= 0 {
 			bufferSize = 100
 		}
