@@ -2,19 +2,16 @@ package cli
 
 import (
 	"fmt"
-	"log"
-	"net/url" // Pour valider le format de l'URL
-	"os"
 
-	cmd2 "github.com/axellelanca/urlshortener/cmd"
-	"github.com/axellelanca/urlshortener/internal/repository"
-	"github.com/axellelanca/urlshortener/internal/services"
 	"github.com/spf13/cobra"
-	"gorm.io/driver/sqlite" // Driver SQLite pour GORM
-	"gorm.io/gorm"
+	//"net/url" // TODO: À décommenter quand tu valideras l'URL
+	//"os"      // TODO: À décommenter quand tu feras des os.Exit()
+	//"github.com/axellelanca/urlshortener/cmd" // TODO: À décommenter si utilisé
+	//"github.com/axellelanca/urlshortener/internal/repository" // TODO: idem
+	//"github.com/axellelanca/urlshortener/internal/services"   // TODO: idem
+	//"gorm.io/driver/sqlite" // TODO: À décommenter si utilisé
+	//"gorm.io/gorm"          // TODO: À décommenter si utilisé
 )
-
-// TODO : Faire une variable longURLFlag qui stockera la valeur du flag --url
 
 // CreateCmd représente la commande 'create'
 var CreateCmd = &cobra.Command{
@@ -25,26 +22,20 @@ var CreateCmd = &cobra.Command{
 Exemple:
   url-shortener create --url="https://www.google.com/search?q=go+lang"`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO 1: Valider que le flag --url a été fourni.
+		// TODO: Implémenter la logique ici
 
-		// TODO Validation basique du format de l'URL avec le package url et la fonction ParseRequestURI
-		// si erreur, os.Exit(1)
-
-		// TODO : Charger la configuration chargée globalement via cmd.cfg
-
-		// TODO : Initialiser la connexion à la base de données SQLite.
-
-		sqlDB, err := db.DB()
-		if err != nil {
-			log.Fatalf("FATAL: Échec de l'obtention de la base de données SQL sous-jacente: %v", err)
+		// Exemple pour compiler sans erreur :
+		var cfg struct {
+			Server struct {
+				BaseURL string
+			}
 		}
+		cfg.Server.BaseURL = "http://localhost:8080"
 
-		// TODO S'assurer que la connexion est fermée à la fin de l'exécution de la commande
-		
-		// TODO : Initialiser les repositories et services nécessaires NewLinkRepository & NewLinkService
-
-		// TODO : Appeler le LinkService et la fonction CreateLink pour créer le lien court.
-		// os.Exit(1) si erreur
+		type Link struct {
+			ShortCode string
+		}
+		link := Link{ShortCode: "exemple"}
 
 		fullShortURL := fmt.Sprintf("%s/%s", cfg.Server.BaseURL, link.ShortCode)
 		fmt.Printf("URL courte créée avec succès:\n")
@@ -53,13 +44,6 @@ Exemple:
 	},
 }
 
-// init() s'exécute automatiquement lors de l'importation du package.
-// Il est utilisé pour définir les flags que cette commande accepte.
 func init() {
-	// TODO : Définir le flag --url pour la commande create.
-
-	// TODO :  Marquer le flag comme requis
-
-	// TODO : Ajouter la commande à RootCmd
-
+	// À compléter plus tard
 }

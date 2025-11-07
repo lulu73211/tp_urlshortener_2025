@@ -29,9 +29,9 @@ func NewClickRepository(db *gorm.DB) *GormClickRepository {
 // Elle reçoit un pointeur vers une structure models.Click et la persiste en utilisant GORM.
 func (r *GormClickRepository) CreateClick(click *models.Click) error {
 	if err := r.db.Create(click).Error; err != nil {
-			return fmt.Errorf("failed to create click: %w", err)
-		}
-		return nil
+		return fmt.Errorf("failed to create click: %w", err)
+	}
+	return nil
 }
 
 // CountClicksByLinkID compte le nombre total de clics pour un ID de lien donné.

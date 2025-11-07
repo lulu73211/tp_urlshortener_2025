@@ -15,8 +15,8 @@ type Click struct {
 
 // ClickEvent représente un événement de clic brut, destiné à être passé via un channel
 type ClickEvent struct {
-	LinkID    uint      `json:"link_id"`    // Identifiant du lien raccourci
-	Timestamp time.Time `json:"timestamp"`  // Horodatage précis du clic
-	UserAgent string    `json:"user_agent"` // User-Agent de l'utilisateur qui a cliqué (informations sur le navigateur/OS)
-	IPAddress string    `json:"ip_address"` // Adresse IP de l'utilisateur
+	LinkID    uint
+	Timestamp time.Time
+	UserAgent string
+	IPAddress string
 }
