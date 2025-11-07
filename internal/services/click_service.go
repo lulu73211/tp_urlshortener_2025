@@ -33,7 +33,6 @@ func (s *ClickService) RecordClick(click *models.Click) error {
 // GetClicksCountByLinkID récupère le nombre total de clics pour un LinkID donné.
 // Cette méthode pourrait être utilisée par le LinkService pour les statistiques, ou directement par l'API stats.
 func (s *ClickService) GetClicksCountByLinkID(linkID uint) (int, error) {
-	// TODO 2: Appeler le ClickRepository (CountclicksByLinkID) pour compter les clics par LinkID.
 	count, err := s.clickRepo.CountClicksByLinkID(linkID)
 	if err != nil {
 		return 0, fmt.Errorf("failed to get clicks count for link ID %d: %w", linkID, err)
