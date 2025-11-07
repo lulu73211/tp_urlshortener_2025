@@ -2,15 +2,17 @@ package cli
 
 import (
 	"fmt"
+	"log"
+	"net/url"
+	"os"
 
+	cmd2 "github.com/axellelanca/urlshortener/cmd"
+	"github.com/axellelanca/urlshortener/internal/models"
+	"github.com/axellelanca/urlshortener/internal/repository"
+	"github.com/axellelanca/urlshortener/internal/services"
 	"github.com/spf13/cobra"
-	//"net/url" // TODO: À décommenter quand tu valideras l'URL
-	//"os"      // TODO: À décommenter quand tu feras des os.Exit()
-	//"github.com/axellelanca/urlshortener/cmd" // TODO: À décommenter si utilisé
-	//"github.com/axellelanca/urlshortener/internal/repository" // TODO: idem
-	//"github.com/axellelanca/urlshortener/internal/services"   // TODO: idem
-	//"gorm.io/driver/sqlite" // TODO: À décommenter si utilisé
-	//"gorm.io/gorm"          // TODO: À décommenter si utilisé
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 // CreateCmd représente la commande 'create'
@@ -22,28 +24,75 @@ var CreateCmd = &cobra.Command{
 Exemple:
   url-shortener create --url="https://www.google.com/search?q=go+lang"`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO: Implémenter la logique ici
+		// Récupération du flag --url depuis Cobra
+		longURL, _ := cmd.Flags().GetString("url")
 
-		// Exemple pour compiler sans erreur :
-		var cfg struct {
-			Server struct {
-				BaseURL string
-			}
+		// Valider que le flag --url a été fourni
+		if longURL == "" {
+			log.Println("Erreur: le flag --url est requis")
+			os.Exit(1)
 		}
-		cfg.Server.BaseURL = "http://localhost:8080"
 
-		type Link struct {
-			ShortCode string
+		// Valider que l'URL est bien formée
+		_, err := url.Parse(longURL)
+		if err != nil {
+			log.Printf("Erreur: URL invalide: %v", err)
+			os.Exit(1)
 		}
-		link := Link{ShortCode: "exemple"}
 
-		fullShortURL := fmt.Sprintf("%s/%s", cfg.Server.BaseURL, link.ShortCode)
+		// Charger la configuration chargée globalement via cmd.cfg
+		cfg := cmd2.Cfg
+		if cfg == nil {
+			log.Fatalf("Configuration not loaded")
+		}
+
+		// Initialiser la connexion à la BDD
+		db, err := gorm.Open(sqlite.Open(cfg.Database.Name), &gorm.Config{})
+		if err != nil {
+			log.Fatalf("Failed to connect to database: %v", err)
+		}
+
+		// Auto-migrate the schema
+		err = db.AutoMigrate(&models.Link{}, &models.Click{})
+		if err != nil {
+			log.Fatalf("Failed to migrate database: %v", err)
+		}
+
+		// S'assurer que la connexion est fermée à la fin
+		sqlDB, err := db.DB()
+		if err != nil {
+			log.Fatalf("FATAL: Échec de l'obtention de la base de données SQL sous-jacente: %v", err)
+		}
+		defer sqlDB.Close()
+
+		// Initialiser les repositories et services nécessaires
+		linkRepo := repository.NewLinkRepository(db)
+		linkService := services.NewLinkService(linkRepo)
+
+		// Créer le lien court
+		link, err := linkService.CreateLink(longURL)
+		if err != nil {
+			log.Printf("Erreur lors de la création du lien: %v", err)
+			os.Exit(1)
+		}
+
+		// Afficher le résultat
+		fullShortURL := fmt.Sprintf("%s/%s", cfg.Server.BaseURL, link.Shortcode)
 		fmt.Printf("URL courte créée avec succès:\n")
-		fmt.Printf("Code: %s\n", link.ShortCode)
+		fmt.Printf("Code court: %s\n", link.Shortcode)
+		fmt.Printf("URL longue: %s\n", link.LongURL)
 		fmt.Printf("URL complète: %s\n", fullShortURL)
+		fmt.Printf("Date de création: %s\n", link.CreatedAt.Format("2006-01-02 15:04:05"))
 	},
 }
 
 func init() {
-	// À compléter plus tard
+	// Définir le flag --url pour la commande create
+	CreateCmd.Flags().StringP("url", "u", "", "URL longue à raccourcir")
+
+	// Marquer le flag comme requis
+	CreateCmd.MarkFlagRequired("url")
+
+	// Ajouter la commande à RootCmd
+	cmd2.RootCmd.AddCommand(CreateCmd)
 }
