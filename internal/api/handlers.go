@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/axellelanca/urlshortener/internal/models"
 	"github.com/axellelanca/urlshortener/internal/services"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
@@ -25,9 +26,14 @@ type ClickEvent struct {
 // Channel global bufferisé utilisé par les workers pour consommer les clics.
 var ClickEventsChannel chan ClickEvent
 
+// Interface optionnelle : si LinkService implémente cette méthode,
+// on pourra utiliser un alias personnalisé.
+type aliasCreator interface {
+	CreateLinkWithAlias(longURL, alias string) (*models.Link, error)
+}
+
 // SetupRoutes configure toutes les routes de l'API Gin et injecte les dépendances nécessaires.
 func SetupRoutes(router *gin.Engine, linkService *services.LinkService, bufferSize int) {
-	// Initialisation du channel des événements de clics.
 	if ClickEventsChannel == nil {
 		if bufferSize <= 0 {
 			bufferSize = 100
@@ -35,17 +41,14 @@ func SetupRoutes(router *gin.Engine, linkService *services.LinkService, bufferSi
 		ClickEventsChannel = make(chan ClickEvent, bufferSize)
 	}
 
-	// Route de Health Check.
 	router.GET("/health", HealthCheckHandler)
 
-	// Routes API versionnées.
 	api := router.Group("/api/v1")
 	{
 		api.POST("/links", CreateShortLinkHandler(linkService))
 		api.GET("/links/:shortCode/stats", GetLinkStatsHandler(linkService))
 	}
 
-	// Route de redirection pour les short codes.
 	router.GET("/:shortCode", RedirectHandler(linkService))
 }
 
@@ -57,6 +60,7 @@ func HealthCheckHandler(c *gin.Context) {
 // CreateLinkRequest représente le corps de la requête JSON pour la création d'un lien.
 type CreateLinkRequest struct {
 	LongURL string `json:"long_url" binding:"required,url"`
+	Alias   string `json:"alias" binding:"omitempty,alphanum"` // URL personnalisée (code court)
 }
 
 // CreateShortLinkHandler gère la création d'une URL courte.
@@ -69,9 +73,24 @@ func CreateShortLinkHandler(linkService *services.LinkService) gin.HandlerFunc {
 			return
 		}
 
-		link, err := linkService.CreateLink(req.LongURL)
+		var (
+			link *models.Link
+			err  error
+		)
+
+		// Si un alias est fourni, on tente d'utiliser CreateLinkWithAlias
+		if req.Alias != "" {
+			if svc, ok := interface{}(linkService).(aliasCreator); ok {
+				link, err = svc.CreateLinkWithAlias(req.LongURL, req.Alias)
+			} else {
+				// Fallback : le service ne gère pas encore les alias, on crée un lien classique
+				link, err = linkService.CreateLink(req.LongURL)
+			}
+		} else {
+			link, err = linkService.CreateLink(req.LongURL)
+		}
+
 		if err != nil {
-			// Si ton service a des erreurs métiers (URL invalide, etc.), tu peux les tester ici
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "could not create link"})
 			return
 		}
@@ -115,7 +134,6 @@ func RedirectHandler(linkService *services.LinkService) gin.HandlerFunc {
 			Referrer:  c.Request.Referer(),
 		}
 
-		// Envoi non bloquant dans le channel bufferisé.
 		select {
 		case ClickEventsChannel <- clickEvent:
 		default:
